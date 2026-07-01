@@ -56,6 +56,13 @@ const ConsumerList: React.FC = () => {
       },
     },
     {
+      title: t('consumer.columns.group'),
+      dataIndex: 'group',
+      key: 'group',
+      ellipsis: true,
+      render: (value) => (value ? value : '-'),
+    },
+    {
       title: t('misc.actions'),
       dataIndex: 'action',
       key: 'action',

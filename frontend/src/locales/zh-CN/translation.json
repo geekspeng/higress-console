@@ -134,7 +134,8 @@
   "consumer": {
     "columns": {
       "name": "消费者名称",
-      "authMethods": "认证方式"
+      "authMethods": "认证方式",
+      "group": "分组"
     },
     "create": "创建消费者",
     "edit": "编辑消费者",
@@ -142,6 +143,9 @@
     "consumerForm": {
       "name": "消费者名称",
       "nameRequired": "请输入消费者名称",
+      "group": "分组",
+      "groupTooltip": "可选的租户标识,网关会将其作为 X-Mse-Consumer-Group 转发给 ai-quota 插件,用于租户级配额池路由。",
+      "groupPlaceholder": "请输入分组（可选）",
       "tokenSourceRequired": "请选择令牌来源",
       "authTokenRequired": "请输入认证令牌",
       "headerNameRequired": "请输入Header名称",

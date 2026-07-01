@@ -16,6 +16,7 @@ import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.ALLOW
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMERS;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMER_CREDENTIAL;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMER_CREDENTIALS;
+import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMER_GROUP;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMER_NAME;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.GLOBAL_AUTH;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.IN_HEADER;
@@ -174,6 +175,14 @@ class KeyAuthCredentialHandler implements CredentialHandler {
             consumers.add(consumerConfig);
         } else {
             keyAuthCredential = mergeExistedConfig(keyAuthCredential, consumerConfig);
+        }
+
+        // group: optional tenant identifier forwarded to ai-quota via X-Mse-Consumer-Group.
+        // Set explicitly so credential rotation can clear it by passing an empty value.
+        if (StringUtils.isNotBlank(consumer.getGroup())) {
+            consumerConfig.put(CONSUMER_GROUP, consumer.getGroup());
+        } else {
+            consumerConfig.remove(CONSUMER_GROUP);
         }
 
         keyAuthCredential.validate(false);

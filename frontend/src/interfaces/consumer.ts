@@ -1,6 +1,7 @@
 export interface Consumer {
   name: string;
   credentials: Credential[];
+  group?: string;
 }
 
 export interface Credential {

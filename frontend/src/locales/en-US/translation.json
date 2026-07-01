@@ -134,7 +134,8 @@
   "consumer": {
     "columns": {
       "name": "Name",
-      "authMethods": "Auth Methods"
+      "authMethods": "Auth Methods",
+      "group": "Group"
     },
     "create": "Create Consumer",
     "edit": "Edit Consumer",
@@ -142,6 +143,9 @@
     "consumerForm": {
       "name": "Name",
       "nameRequired": "Please input consumer name",
+      "group": "Group",
+      "groupTooltip": "Optional tenant identifier forwarded to the gateway as X-Mse-Consumer-Group, used by ai-quota for tenant-level pool routing.",
+      "groupPlaceholder": "Please input a group (optional)",
       "tokenSourceRequired": "Please choose a token source",
       "authTokenRequired": "Please input auth token",
       "headerNameRequired": "Please input header name",

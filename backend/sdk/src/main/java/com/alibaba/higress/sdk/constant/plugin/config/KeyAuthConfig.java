@@ -26,4 +26,5 @@ public class KeyAuthConfig {
 
     public static final String ALLOW = "allow";
     public static final String GLOBAL_AUTH = "global_auth";
+    public static final String CONSUMER_GROUP = "group";
 }

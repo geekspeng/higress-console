@@ -36,6 +36,8 @@ public class Consumer {
     private String name;
     @Schema(description = "Consumer credentials")
     private List<Credential> credentials;
+    @Schema(description = "Consumer group")
+    private String group;
 
     public void validate(boolean forUpdate) {
         if (StringUtils.isBlank(name)) {

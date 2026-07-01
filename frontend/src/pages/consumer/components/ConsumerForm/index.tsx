@@ -1,6 +1,6 @@
 import { CredentialType } from '@/interfaces/consumer';
-import { MinusCircleOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Select, Tabs } from 'antd';
+import { MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Select, Tabs, Tooltip } from 'antd';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -51,6 +51,14 @@ const ConsumerForm: React.FC = forwardRef((props, ref) => {
         }
       }
       values.credentials = credentials;
+      if (typeof values.group === 'string') {
+        const trimmed = values.group.trim();
+        if (trimmed) {
+          values.group = trimmed;
+        } else {
+          delete values.group;
+        }
+      }
       return values;
     },
   }));
@@ -106,6 +114,23 @@ const ConsumerForm: React.FC = forwardRef((props, ref) => {
           allowClear
           maxLength={63}
           disabled={value}
+        />
+      </Form.Item>
+      <Form.Item
+        label={
+          <span>
+            {t('consumer.consumerForm.group')}
+            <Tooltip title={t('consumer.consumerForm.groupTooltip')}>
+              <QuestionCircleOutlined style={{ marginLeft: '0.25rem' }} />
+            </Tooltip>
+          </span>
+        }
+        name="group"
+      >
+        <Input
+          allowClear
+          maxLength={63}
+          placeholder={t('consumer.consumerForm.groupPlaceholder')}
         />
       </Form.Item>
       <div>{t("consumer.columns.authMethods")}</div>
