@@ -33,6 +33,16 @@ public class AllowList {
     private Boolean authEnabled;
     private List<String> credentialTypes;
     private List<String> consumerNames;
+    /**
+     * Consumer group names allowed on the target. Written to the plugin's
+     * {@code allow_groups} route-level list.
+     */
+    private List<String> consumerGroups;
+    /**
+     * Raw credential (API key) values allowed on the target. Written to the
+     * plugin's {@code allow_credentials} route-level list.
+     */
+    private List<String> credentials;
 
     public static AllowListBuilder forTarget(WasmPluginInstanceScope scope, String target) {
         return new AllowListBuilder().targets(MapUtil.of(scope, target));

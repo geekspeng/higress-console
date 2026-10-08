@@ -39,6 +39,10 @@ public class Consumer {
     @Schema(description = "Consumer group")
     private String group;
 
+    public Consumer(String name, List<Credential> credentials) {
+        this(name, credentials, null);
+    }
+
     public void validate(boolean forUpdate) {
         if (StringUtils.isBlank(name)) {
             throw new ValidationException("name cannot be blank.");

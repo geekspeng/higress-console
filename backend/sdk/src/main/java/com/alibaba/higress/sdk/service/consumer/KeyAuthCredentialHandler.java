@@ -13,6 +13,8 @@
 package com.alibaba.higress.sdk.service.consumer;
 
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.ALLOW;
+import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.ALLOW_CREDENTIALS;
+import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.ALLOW_GROUPS;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMERS;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMER_CREDENTIAL;
 import static com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig.CONSUMER_CREDENTIALS;
@@ -37,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.higress.sdk.constant.plugin.BuiltInPluginName;
 import com.alibaba.higress.sdk.model.WasmPluginInstance;
+import com.alibaba.higress.sdk.model.consumer.AllowList;
 import com.alibaba.higress.sdk.model.consumer.AllowListOperation;
 import com.alibaba.higress.sdk.model.consumer.Consumer;
 import com.alibaba.higress.sdk.model.consumer.CredentialType;
@@ -252,21 +255,35 @@ class KeyAuthCredentialHandler implements CredentialHandler {
 
     @Override
     public List<String> getAllowedConsumers(WasmPluginInstance instance) {
+        return getStringList(instance, ALLOW);
+    }
+
+    @Override
+    public List<String> getAllowGroups(WasmPluginInstance instance) {
+        return getStringList(instance, ALLOW_GROUPS);
+    }
+
+    @Override
+    public List<String> getAllowCredentials(WasmPluginInstance instance) {
+        return getStringList(instance, ALLOW_CREDENTIALS);
+    }
+
+    private static List<String> getStringList(WasmPluginInstance instance, String key) {
         Map<String, Object> configurations = instance.getConfigurations();
         if (MapUtils.isEmpty(configurations)) {
             return Lists.newArrayList();
         }
 
-        Object allowObj = configurations.get(ALLOW);
-        if (!(allowObj instanceof List<?>)) {
+        Object valueObj = configurations.get(key);
+        if (!(valueObj instanceof List<?>)) {
             return Lists.newArrayList();
         }
-        List<?> allowList = (List<?>)allowObj;
-        return allowList.stream().filter(a -> a instanceof String).map(a -> (String)a).collect(Collectors.toList());
+        List<?> valueList = (List<?>)valueObj;
+        return valueList.stream().filter(a -> a instanceof String).map(a -> (String)a).collect(Collectors.toList());
     }
 
     @Override
-    public void updateAllowList(AllowListOperation operation, WasmPluginInstance instance, List<String> consumerNames) {
+    public void updateAllowList(AllowListOperation operation, WasmPluginInstance instance, AllowList allowList) {
         Map<String, Object> configurations = instance.getConfigurations();
         if (MapUtils.isEmpty(configurations)) {
             configurations = new HashMap<>();
@@ -274,21 +291,29 @@ class KeyAuthCredentialHandler implements CredentialHandler {
         }
 
         List<String> newAllowList = getAllowedConsumers(instance);
+        List<String> newGroups = getAllowGroups(instance);
+        List<String> newCredentials = getAllowCredentials(instance);
         switch (operation) {
             case ADD:
-                for (String consumerName : consumerNames) {
-                    if (!newAllowList.contains(consumerName)) {
-                        newAllowList.add(consumerName);
-                    }
-                }
+                addAllIfAbsent(newAllowList, allowList.getConsumerNames());
                 break;
             case REMOVE:
-                for (String consumerName : consumerNames) {
-                    newAllowList.remove(consumerName);
+                if (allowList.getConsumerNames() != null) {
+                    newAllowList.removeAll(allowList.getConsumerNames());
                 }
                 break;
             case REPLACE:
-                newAllowList = consumerNames;
+                newAllowList = allowList.getConsumerNames();
+                // allow_groups / allow_credentials are platform-level authorization
+                // capability fields: REPLACE carrying null means "not issued this
+                // time", keeping the route instance's current value; carrying a
+                // non-null value (including an empty array) replaces it.
+                if (allowList.getConsumerGroups() != null) {
+                    newGroups = allowList.getConsumerGroups();
+                }
+                if (allowList.getCredentials() != null) {
+                    newCredentials = allowList.getCredentials();
+                }
                 break;
             case TOGGLE_ONLY:
                 if (CollectionUtils.isEmpty(newAllowList)) {
@@ -298,7 +323,41 @@ class KeyAuthCredentialHandler implements CredentialHandler {
             default:
                 throw new UnsupportedOperationException("Unsupported operation: " + operation);
         }
-        configurations.put(ALLOW, newAllowList);
+        // Do not write the key when the list is empty: the plugin rejects the whole
+        // configuration when an allow list field exists but is an empty array.
+        putNonEmptyList(configurations, ALLOW, newAllowList);
+        putNonEmptyList(configurations, ALLOW_GROUPS, newGroups);
+        putNonEmptyList(configurations, ALLOW_CREDENTIALS, newCredentials);
+
+        // The plugin also rejects rule-level configs that carry none of the three
+        // allow lists, so an enabled instance must keep at least one non-empty
+        // list. Disabled instances are fine: the plugin skips disabled rules.
+        if (Boolean.TRUE.equals(instance.getEnabled())
+            && CollectionUtils.isEmpty((List<?>)configurations.get(ALLOW))
+            && CollectionUtils.isEmpty((List<?>)configurations.get(ALLOW_GROUPS))
+            && CollectionUtils.isEmpty((List<?>)configurations.get(ALLOW_CREDENTIALS))) {
+            throw new IllegalArgumentException(
+                "At least one of consumer names, consumer groups and API keys must be configured when authentication is enabled.");
+        }
+    }
+
+    private static void addAllIfAbsent(List<String> target, List<String> values) {
+        if (values == null) {
+            return;
+        }
+        for (String value : values) {
+            if (!target.contains(value)) {
+                target.add(value);
+            }
+        }
+    }
+
+    private static void putNonEmptyList(Map<String, Object> configurations, String key, List<String> values) {
+        if (CollectionUtils.isEmpty(values)) {
+            configurations.remove(key);
+        } else {
+            configurations.put(key, values);
+        }
     }
 
     private Consumer extractConsumer(Map<String, Object> consumerMap) {
@@ -319,6 +378,12 @@ class KeyAuthCredentialHandler implements CredentialHandler {
         Consumer consumer = new Consumer();
         consumer.setName(name);
         consumer.setCredentials(Lists.newArrayList(credential));
+        // Read the group back for list display and edit form echo (saveConsumer
+        // uses an empty value to clear the group).
+        String group = MapUtils.getString(consumerMap, CONSUMER_GROUP);
+        if (StringUtils.isNotBlank(group)) {
+            consumer.setGroup(group);
+        }
         return consumer;
     }
 

@@ -23,9 +23,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.alibaba.higress.sdk.constant.plugin.BuiltInPluginName;
+import com.alibaba.higress.sdk.constant.plugin.config.KeyAuthConfig;
 import com.alibaba.higress.sdk.exception.ValidationException;
 import com.alibaba.higress.sdk.model.WasmPluginInstance;
 import com.alibaba.higress.sdk.model.WasmPluginInstanceScope;
+import com.alibaba.higress.sdk.model.consumer.AllowList;
 import com.alibaba.higress.sdk.model.consumer.AllowListOperation;
 import com.alibaba.higress.sdk.model.consumer.Consumer;
 import com.alibaba.higress.sdk.model.consumer.Credential;
@@ -139,6 +141,44 @@ public class KeyAuthCredentialHandlerTest {
         List<Consumer> consumers = handler.extractConsumers(instance);
         Assertions.assertNotNull(consumers);
         Assertions.assertTrue(consumers.isEmpty());
+    }
+
+    @Test
+    public void extractConsumersTestGroupBackfill() {
+        WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
+        instance.setConfigurations(new HashMap<>());
+        Map<String, Object> configurations = instance.getConfigurations();
+        List<Map<String, Object>> consumers =
+            (List<Map<String, Object>>)configurations.computeIfAbsent("consumers", k -> new ArrayList<>());
+
+        Map<String, Object> withGroup = new HashMap<>();
+        withGroup.put("name", "alice");
+        withGroup.put("keys", Lists.newArrayList("x-api-key"));
+        withGroup.put("credentials", Lists.newArrayList("token1"));
+        withGroup.put("in_header", true);
+        withGroup.put("group", "team-a");
+        consumers.add(withGroup);
+
+        Map<String, Object> withoutGroup = new HashMap<>();
+        withoutGroup.put("name", "bob");
+        withoutGroup.put("keys", Lists.newArrayList("x-api-key"));
+        withoutGroup.put("credentials", Lists.newArrayList("token2"));
+        withoutGroup.put("in_header", true);
+        consumers.add(withoutGroup);
+
+        List<Consumer> extracted = handler.extractConsumers(instance);
+        Assertions.assertEquals(2, extracted.size());
+
+        Consumer alice = extracted.stream()
+            .filter(c -> "alice".equals(c.getName())).findFirst().orElse(null);
+        Assertions.assertNotNull(alice);
+        // group 必须回读，供列表展示与编辑表单回显
+        Assertions.assertEquals("team-a", alice.getGroup());
+
+        Consumer bob = extracted.stream()
+            .filter(c -> "bob".equals(c.getName())).findFirst().orElse(null);
+        Assertions.assertNotNull(bob);
+        Assertions.assertNull(bob.getGroup());
     }
 
     @Test
@@ -416,40 +456,173 @@ public class KeyAuthCredentialHandlerTest {
         Assertions.assertEquals(Lists.newArrayList("a", "b"), handler.getAllowedConsumers(instance));
     }
 
+    private static AllowList allowList(List<String> consumerNames, List<String> consumerGroups,
+        List<String> credentials) {
+        return AllowList.builder().consumerNames(consumerNames).consumerGroups(consumerGroups)
+            .credentials(credentials).build();
+    }
+
     @Test
     public void testUpdateAllowList_AllBranches() {
         WasmPluginInstance instance = new WasmPluginInstance();
         // 1. 配置为null，ADD
-        handler.updateAllowList(AllowListOperation.ADD, instance, Lists.newArrayList("a"));
+        handler.updateAllowList(AllowListOperation.ADD, instance, allowList(Lists.newArrayList("a"), null, null));
         Assertions.assertEquals(Lists.newArrayList("a"), handler.getAllowedConsumers(instance));
         // 2. ADD已存在的
-        handler.updateAllowList(AllowListOperation.ADD, instance, Lists.newArrayList("a", "b"));
+        handler.updateAllowList(AllowListOperation.ADD, instance, allowList(Lists.newArrayList("a", "b"), null, null));
         Assertions.assertEquals(Lists.newArrayList("a", "b"), handler.getAllowedConsumers(instance));
         // 3. REMOVE存在的
-        handler.updateAllowList(AllowListOperation.REMOVE, instance, Lists.newArrayList("a"));
+        handler.updateAllowList(AllowListOperation.REMOVE, instance, allowList(Lists.newArrayList("a"), null, null));
         Assertions.assertEquals(Lists.newArrayList("b"), handler.getAllowedConsumers(instance));
         // 4. REMOVE不存在的
-        handler.updateAllowList(AllowListOperation.REMOVE, instance, Lists.newArrayList("notfound"));
+        handler.updateAllowList(AllowListOperation.REMOVE, instance, allowList(Lists.newArrayList("notfound"), null, null));
         Assertions.assertEquals(Lists.newArrayList("b"), handler.getAllowedConsumers(instance));
         // 5. REPLACE
-        handler.updateAllowList(AllowListOperation.REPLACE, instance, Lists.newArrayList("x", "y"));
+        handler.updateAllowList(AllowListOperation.REPLACE, instance, allowList(Lists.newArrayList("x", "y"), null, null));
         Assertions.assertEquals(Lists.newArrayList("x", "y"), handler.getAllowedConsumers(instance));
         // 6. consumerNames为空
-        handler.updateAllowList(AllowListOperation.REPLACE, instance, null);
+        handler.updateAllowList(AllowListOperation.REPLACE, instance, allowList(null, null, null));
         Assertions.assertTrue(handler.getAllowedConsumers(instance).isEmpty());
-        handler.updateAllowList(AllowListOperation.REPLACE, instance, Lists.newArrayList());
+        handler.updateAllowList(AllowListOperation.REPLACE, instance, allowList(Lists.newArrayList(), null, null));
         Assertions.assertTrue(handler.getAllowedConsumers(instance).isEmpty());
         // 7. 不支持的operation
         try {
-            handler.updateAllowList(null, instance, Lists.newArrayList("a"));
+            handler.updateAllowList(null, instance, allowList(Lists.newArrayList("a"), null, null));
             Assertions.fail("Should throw exception");
         } catch (Exception e) {
             Assertions.assertTrue(e instanceof UnsupportedOperationException || e instanceof NullPointerException);
         }
         // 8. TOGGLE_ONLY
-        handler.updateAllowList(AllowListOperation.ADD, instance, Lists.newArrayList("a", "b"));
-        handler.updateAllowList(AllowListOperation.TOGGLE_ONLY, instance, null);
+        handler.updateAllowList(AllowListOperation.ADD, instance, allowList(Lists.newArrayList("a", "b"), null, null));
+        handler.updateAllowList(AllowListOperation.TOGGLE_ONLY, instance, allowList(null, null, null));
         Assertions.assertEquals(Lists.newArrayList("a", "b"), handler.getAllowedConsumers(instance));
+    }
+
+    @Test
+    public void testUpdateAllowList_ReplaceWritesGroupsAndCredentials() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList("team-a"),
+                Lists.newArrayList("tok-1", "tok-2")));
+
+        Assertions.assertEquals(Lists.newArrayList("c1"), handler.getAllowedConsumers(instance));
+        Assertions.assertEquals(Lists.newArrayList("team-a"), handler.getAllowGroups(instance));
+        Assertions.assertEquals(Lists.newArrayList("tok-1", "tok-2"), handler.getAllowCredentials(instance));
+        // 插件配置层字段名必须是 snake_case
+        Assertions.assertEquals(Lists.newArrayList("team-a"),
+            instance.getConfigurations().get(KeyAuthConfig.ALLOW_GROUPS));
+        Assertions.assertEquals(Lists.newArrayList("tok-1", "tok-2"),
+            instance.getConfigurations().get(KeyAuthConfig.ALLOW_CREDENTIALS));
+    }
+
+    @Test
+    public void testUpdateAllowList_ReplaceNullKeepsGroupsAndCredentials() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList("team-a"), Lists.newArrayList("tok-1")));
+
+        // 平台暂不下发 groups/credentials（null）时，REPLACE 不得抹掉路由实例现值
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c2"), null, null));
+
+        Assertions.assertEquals(Lists.newArrayList("c2"), handler.getAllowedConsumers(instance));
+        Assertions.assertEquals(Lists.newArrayList("team-a"), handler.getAllowGroups(instance));
+        Assertions.assertEquals(Lists.newArrayList("tok-1"), handler.getAllowCredentials(instance));
+    }
+
+    @Test
+    public void testUpdateAllowList_EmptyListsNotWrittenToConfig() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        // 空列表不得写键：Go 插件对"字段存在但为空数组"直接拒绝加载配置
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList(), Lists.newArrayList()));
+
+        Assertions.assertNull(instance.getConfigurations().get(KeyAuthConfig.ALLOW_GROUPS));
+        Assertions.assertNull(instance.getConfigurations().get(KeyAuthConfig.ALLOW_CREDENTIALS));
+        Assertions.assertTrue(handler.getAllowGroups(instance).isEmpty());
+        Assertions.assertTrue(handler.getAllowCredentials(instance).isEmpty());
+
+        // 先写入非空，再 REPLACE 空数组（明确清空语义）→ 键应被移除而非保留空数组
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList("team-a"), Lists.newArrayList("tok-1")));
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList(), Lists.newArrayList()));
+
+        Assertions.assertNull(instance.getConfigurations().get(KeyAuthConfig.ALLOW_GROUPS));
+        Assertions.assertNull(instance.getConfigurations().get(KeyAuthConfig.ALLOW_CREDENTIALS));
+        Assertions.assertTrue(handler.getAllowGroups(instance).isEmpty());
+    }
+
+    @Test
+    public void testUpdateAllowList_AddRemoveToggleKeepGroupsAndCredentials() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList("team-a"), Lists.newArrayList("tok-1")));
+
+        // ADD/REMOVE/TOGGLE_ONLY 仅操作 consumerNames，groups/credentials 维持现值
+        handler.updateAllowList(AllowListOperation.ADD, instance,
+            allowList(Lists.newArrayList("c2"), Lists.newArrayList("should-not-apply"), Lists.newArrayList("x")));
+        Assertions.assertEquals(Lists.newArrayList("team-a"), handler.getAllowGroups(instance));
+        Assertions.assertEquals(Lists.newArrayList("tok-1"), handler.getAllowCredentials(instance));
+
+        handler.updateAllowList(AllowListOperation.REMOVE, instance,
+            allowList(Lists.newArrayList("c1"), Lists.newArrayList("should-not-apply"), Lists.newArrayList("x")));
+        Assertions.assertEquals(Lists.newArrayList("team-a"), handler.getAllowGroups(instance));
+
+        handler.updateAllowList(AllowListOperation.TOGGLE_ONLY, instance,
+            allowList(null, Lists.newArrayList("should-not-apply"), Lists.newArrayList("x")));
+        Assertions.assertEquals(Lists.newArrayList("team-a"), handler.getAllowGroups(instance));
+        Assertions.assertEquals(Lists.newArrayList("tok-1"), handler.getAllowCredentials(instance));
+    }
+
+    @Test
+    public void testUpdateAllowList_GroupsOnlyDoesNotWriteAllowKey() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        instance.setEnabled(true);
+        // Go 插件对规则级"allow 存在但为空数组"直接拒绝整份配置（allow cannot be
+        // empty），groups-only 授权必须只下发 allow_groups，不带 allow 键
+        handler.updateAllowList(AllowListOperation.REPLACE, instance,
+            allowList(Lists.newArrayList(), Lists.newArrayList("team-a"), Lists.newArrayList()));
+
+        Assertions.assertNull(instance.getConfigurations().get(KeyAuthConfig.ALLOW));
+        Assertions.assertTrue(handler.getAllowedConsumers(instance).isEmpty());
+        Assertions.assertEquals(Lists.newArrayList("team-a"), handler.getAllowGroups(instance));
+        Assertions.assertNull(instance.getConfigurations().get(KeyAuthConfig.ALLOW_CREDENTIALS));
+    }
+
+    @Test
+    public void testUpdateAllowList_EnabledInstanceRequiresAtLeastOneList() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        instance.setEnabled(true);
+        // 启用认证但三列表全空：插件会以 "at least one of allow/allow_groups/
+        // allow_credentials is required" 拒绝整份配置，控制台必须提前拦截
+        Assertions.assertThrows(IllegalArgumentException.class,
+            () -> handler.updateAllowList(AllowListOperation.REPLACE, instance,
+                allowList(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())));
+
+        // 未启用的实例不做该限制（configDisable=true 的规则会被插件跳过）
+        WasmPluginInstance disabledInstance = new WasmPluginInstance();
+        disabledInstance.setEnabled(false);
+        handler.updateAllowList(AllowListOperation.REPLACE, disabledInstance,
+            allowList(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()));
+        Assertions.assertTrue(handler.getAllowedConsumers(disabledInstance).isEmpty());
+    }
+
+    @Test
+    public void testGetAllowGroupsAndCredentials_Defensive() {
+        WasmPluginInstance instance = new WasmPluginInstance();
+        Assertions.assertTrue(handler.getAllowGroups(instance).isEmpty());
+        Assertions.assertTrue(handler.getAllowCredentials(instance).isEmpty());
+        instance.setConfigurations(new HashMap<>());
+        Assertions.assertTrue(handler.getAllowGroups(instance).isEmpty());
+        Assertions.assertTrue(handler.getAllowCredentials(instance).isEmpty());
+        instance.setConfigurations(MapUtil.of("allow_groups", "notalist", "allow_credentials", 123));
+        Assertions.assertTrue(handler.getAllowGroups(instance).isEmpty());
+        Assertions.assertTrue(handler.getAllowCredentials(instance).isEmpty());
+        instance.setConfigurations(
+            MapUtil.of("allow_groups", Lists.newArrayList("g", 123), "allow_credentials", Lists.newArrayList("t")));
+        Assertions.assertEquals(Lists.newArrayList("g"), handler.getAllowGroups(instance));
+        Assertions.assertEquals(Lists.newArrayList("t"), handler.getAllowCredentials(instance));
     }
 
     @Test
@@ -611,7 +784,8 @@ public class KeyAuthCredentialHandlerTest {
 
         // 只更新key，不提供source和values
         Consumer partialConsumer = new Consumer("testuser",
-            Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.HEADER.name(), "X-API-KEY", null)));
+            Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.HEADER.name(), "X-API-KEY", null)),
+            null);
 
         Assertions.assertTrue(handler.saveConsumer(instance, partialConsumer));
 
@@ -712,7 +886,8 @@ public class KeyAuthCredentialHandlerTest {
 
         // Mock an unsupported source by using a custom KeyAuthCredential with invalid source
         Consumer consumer = new Consumer("testuser",
-            Lists.newArrayList(new KeyAuthCredential("UNSUPPORTED", "X-API-KEY", Lists.newArrayList("test-key"))));
+            Lists.newArrayList(new KeyAuthCredential("UNSUPPORTED", "X-API-KEY", Lists.newArrayList("test-key"))),
+            null);
 
         Assertions.assertThrows(ValidationException.class, () -> handler.saveConsumer(instance, consumer));
     }

@@ -25,6 +25,15 @@ const ConsumerList: React.FC = () => {
       ellipsis: true,
     },
     {
+      title: t('consumer.columns.group'),
+      dataIndex: 'group',
+      key: 'group',
+      ellipsis: true,
+      render: (value) => (value
+        ? (<Tag color="blue" key={value}>{value}</Tag>)
+        : '-'),
+    },
+    {
       title: t('consumer.columns.authMethods'),
       dataIndex: 'credentials',
       key: 'credentials',
@@ -54,13 +63,6 @@ const ConsumerList: React.FC = () => {
           </>
         );
       },
-    },
-    {
-      title: t('consumer.columns.group'),
-      dataIndex: 'group',
-      key: 'group',
-      ellipsis: true,
-      render: (value) => (value ? value : '-'),
     },
     {
       title: t('misc.actions'),

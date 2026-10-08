@@ -33,6 +33,10 @@ public class RouteAuthConfig {
     private List<String> allowedCredentialTypes;
     @Schema(description = "Allowed consumer names")
     private List<String> allowedConsumers;
+    @Schema(description = "Allowed consumer group names")
+    private List<String> allowedConsumerGroups;
+    @Schema(description = "Allowed credential (API key) values")
+    private List<String> allowedCredentials;
 
     public void validate() {
     }

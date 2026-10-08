@@ -134,7 +134,8 @@ public class ConsumerServiceImpl implements ConsumerService {
                     .filter(a -> Objects.equals(instance.getTargets(), a.getTargets())).findFirst().orElseGet(() -> {
                         AllowList newAllowList =
                             AllowList.builder().targets(instance.getTargets()).authEnabled(instance.getEnabled())
-                                .credentialTypes(new ArrayList<>()).consumerNames(new ArrayList<>()).build();
+                                .credentialTypes(new ArrayList<>()).consumerNames(new ArrayList<>())
+                                .consumerGroups(new ArrayList<>()).credentials(new ArrayList<>()).build();
                         allowLists.add(newAllowList);
                         return newAllowList;
                     });
@@ -149,6 +150,8 @@ public class ConsumerServiceImpl implements ConsumerService {
                         }
                     }
                 }
+                mergeIntoList(allowList.getConsumerGroups(), handler.getAllowGroups(instance));
+                mergeIntoList(allowList.getCredentials(), handler.getAllowCredentials(instance));
             }
         }
         return allowLists;
@@ -165,6 +168,8 @@ public class ConsumerServiceImpl implements ConsumerService {
 
         List<String> credentialTypes = null;
         Set<String> allConsumerNames = null;
+        Set<String> allConsumerGroups = null;
+        Set<String> allCredentials = null;
         boolean authEnabled = false;
         for (CredentialHandler handler : CREDENTIAL_HANDLERS.values()) {
             WasmPluginInstance instance = getPluginInstance(handler, targets);
@@ -183,12 +188,32 @@ public class ConsumerServiceImpl implements ConsumerService {
                 allConsumerNames = new LinkedHashSet<>();
             }
             allConsumerNames.addAll(consumerNames);
+            if (allConsumerGroups == null) {
+                allConsumerGroups = new LinkedHashSet<>();
+            }
+            allConsumerGroups.addAll(handler.getAllowGroups(instance));
+            if (allCredentials == null) {
+                allCredentials = new LinkedHashSet<>();
+            }
+            allCredentials.addAll(handler.getAllowCredentials(instance));
         }
         if (allConsumerNames == null) {
             return null;
         }
         return AllowList.builder().targets(targets).authEnabled(authEnabled).credentialTypes(credentialTypes)
-            .consumerNames(new ArrayList<>(allConsumerNames)).build();
+            .consumerNames(new ArrayList<>(allConsumerNames)).consumerGroups(new ArrayList<>(allConsumerGroups))
+            .credentials(new ArrayList<>(allCredentials)).build();
+    }
+
+    private static void mergeIntoList(List<String> target, List<String> values) {
+        if (CollectionUtils.isEmpty(values)) {
+            return;
+        }
+        for (String value : values) {
+            if (!target.contains(value)) {
+                target.add(value);
+            }
+        }
     }
 
     @Override
@@ -259,7 +284,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             if (allowList.getAuthEnabled() != null) {
                 targetInstance.setEnabled(allowList.getAuthEnabled());
             }
-            handler.updateAllowList(operation, targetInstance, consumerNames);
+            handler.updateAllowList(operation, targetInstance, allowList);
             instancesToSave.add(targetInstance);
 
             WasmPluginInstance globalInstance = instances.stream()

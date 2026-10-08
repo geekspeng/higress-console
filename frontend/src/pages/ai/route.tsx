@@ -3,6 +3,7 @@ import { AiRoute, AiUpstream } from '@/interfaces/ai-route';
 import { fetchPluginsByRoute, RoutePredicate } from '@/interfaces/route';
 import { WasmPluginData } from '@/interfaces/wasm-plugin';
 import { getI18nValue } from "@/pages/plugin/utils";
+import { hasAnyAuthScope, maskAllowedCredential } from '@/pages/route/components/RouteForm/routeAuthConfig';
 import { getWasmPlugins } from '@/services';
 import { addAiRoute, deleteAiRoute, getAiRoutes, updateAiRoute } from '@/services/ai-route';
 import { ArrowRightOutlined, ExclamationCircleOutlined, RedoOutlined, SearchOutlined } from '@ant-design/icons';
@@ -130,10 +131,30 @@ const AiRouteList: React.FC = () => {
         if (!authConfig || !authConfig.enabled) {
           return t('aiRoute.authNotEnabled');
         }
-        if (!Array.isArray(value) || !value.length) {
+        // 授权方式单选后可能是消费者/分组/凭证值任一列表，全部展示
+        const consumers = Array.isArray(authConfig.allowedConsumers) ? authConfig.allowedConsumers : [];
+        const groups = Array.isArray(authConfig.allowedConsumerGroups) ? authConfig.allowedConsumerGroups : [];
+        const credentials = Array.isArray(authConfig.allowedCredentials) ? authConfig.allowedCredentials : [];
+        if (!consumers.length && !groups.length && !credentials.length) {
           return t('aiRoute.authEnabledWithoutConsumer');
         }
-        return <ConsumerList consumers={value} />;
+        const scopeList = (label: string, values: string[], mask = false) => (
+          <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ color: '#999' }}>{label}</span>
+            <ConsumerList consumers={mask ? values.map(v => maskAllowedCredential(v)) : values} />
+          </div>
+        );
+        const parts = [];
+        if (consumers.length) {
+          parts.push(<ConsumerList key="consumers" consumers={consumers} />);
+        }
+        if (groups.length) {
+          parts.push(scopeList(t('aiRoute.authScopeGroup'), groups));
+        }
+        if (credentials.length) {
+          parts.push(scopeList(t('aiRoute.authScopeCredential'), credentials, true));
+        }
+        return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{parts}</div>;
       },
     },
     {
@@ -212,17 +233,19 @@ const AiRouteList: React.FC = () => {
         item.upstreams?.some(u => u.provider?.toLowerCase().includes(q)));
     }
 
-    // 5. Authorized consumer ID (any-match; routes without auth or consumers are excluded)
+    // 5. Authorization scope (any-match across consumers / groups / credentials)
     if (debouncedConsumerFilter) {
       const q = debouncedConsumerFilter.toLowerCase();
+      const match = (list?: string[]) =>
+        Array.isArray(list) && list.some(v => typeof v === 'string' && v.toLowerCase().includes(q));
       results = results.filter(item => {
         const { authConfig } = item;
-        if (!authConfig?.enabled ||
-            !Array.isArray(authConfig.allowedConsumers)) {
+        if (!authConfig?.enabled) {
           return false;
         }
-        return authConfig.allowedConsumers.some(c =>
-          c.toLowerCase().includes(q));
+        return match(authConfig.allowedConsumers)
+          || match(authConfig.allowedConsumerGroups)
+          || match(authConfig.allowedCredentials);
       });
     }
 
@@ -232,16 +255,12 @@ const AiRouteList: React.FC = () => {
       results = results.filter(item => {
         const { authConfig } = item;
         const notEnabled = !authConfig || !authConfig.enabled;
-        const enabledNoConsumers = authConfig?.enabled &&
-          (!Array.isArray(authConfig.allowedConsumers) ||
-           authConfig.allowedConsumers.length === 0);
-        const hasConsumers = authConfig?.enabled &&
-          Array.isArray(authConfig.allowedConsumers) &&
-          authConfig.allowedConsumers.length > 0;
+        const enabledNoScope = authConfig?.enabled && !hasAnyAuthScope(authConfig);
+        const hasScope = authConfig?.enabled && hasAnyAuthScope(authConfig);
         return (
           (set.has('__auth_disabled__') && notEnabled) ||
-          (set.has('__no_consumers__') && enabledNoConsumers) ||
-          (set.has('__auth_enabled__') && hasConsumers)
+          (set.has('__no_consumers__') && enabledNoScope) ||
+          (set.has('__auth_enabled__') && hasScope)
         );
       });
     }

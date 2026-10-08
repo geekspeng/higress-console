@@ -12,9 +12,11 @@
  */
 package com.alibaba.higress.sdk.service.consumer;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.alibaba.higress.sdk.model.WasmPluginInstance;
+import com.alibaba.higress.sdk.model.consumer.AllowList;
 import com.alibaba.higress.sdk.model.consumer.AllowListOperation;
 import com.alibaba.higress.sdk.model.consumer.Consumer;
 
@@ -36,5 +38,23 @@ interface CredentialHandler {
 
     List<String> getAllowedConsumers(WasmPluginInstance instance);
 
-    void updateAllowList(AllowListOperation operation, WasmPluginInstance instance, List<String> consumerNames);
+    /**
+     * Consumer group names allowed on the instance's target
+     * ({@code allow_groups}). Only the key-auth plugin supports groups today;
+     * other handlers have none.
+     */
+    default List<String> getAllowGroups(WasmPluginInstance instance) {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Raw credential (API key) values allowed on the instance's target
+     * ({@code allow_credentials}). Only the key-auth plugin supports raw
+     * credential allow lists today; other handlers have none.
+     */
+    default List<String> getAllowCredentials(WasmPluginInstance instance) {
+        return Collections.emptyList();
+    }
+
+    void updateAllowList(AllowListOperation operation, WasmPluginInstance instance, AllowList allowList);
 }

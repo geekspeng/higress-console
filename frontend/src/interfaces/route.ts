@@ -101,6 +101,10 @@ export interface Route {
 export interface AuthConfig {
   enabled: boolean;
   allowedConsumers?: string[];
+  /** Consumer group names allowed on the route (plugin allow_groups). */
+  allowedConsumerGroups?: string[];
+  /** Raw credential (API key) values allowed on the route (plugin allow_credentials). */
+  allowedCredentials?: string[];
 }
 
 export interface RouteResponse {

@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Consumer, CredentialType } from '@/interfaces/consumer';
+import { Consumer, CredentialType, KeyAuthCredentialSource } from '@/interfaces/consumer';
 import { DEFAULT_DOMAIN, Domain } from '@/interfaces/domain';
 import { LlmProvider } from '@/interfaces/llm-provider';
 import FactorGroup from '@/pages/route/components/FactorGroup';
@@ -8,7 +8,7 @@ import { getConsumers } from '@/services/consumer';
 import { getLlmProviders } from '@/services/llm-provider';
 import { MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined, RedoOutlined } from '@ant-design/icons';
 import { useRequest } from 'ahooks';
-import { Button, Checkbox, Empty, Form, Input, InputNumber, Select, Space, Switch, Tooltip } from 'antd';
+import { Alert, Button, Checkbox, Empty, Form, Input, InputNumber, Radio, Select, Space, Switch, Tooltip } from 'antd';
 import { uniqueId } from "lodash";
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,9 @@ import { aiModelProviders } from '../../configs';
 import { HistoryButton, ModelMappingEditor, RedoOutlinedBtn } from './Components';
 import { modelMapping2String, string2ModelMapping } from './util';
 import KeyValueGroup from '@/pages/route/components/KeyValueGroup';
+import {
+  AuthConfigLists, AuthMode, getCredentialOptions, getListsForMode, hasIgnoredLists, resolveAuthMode,
+} from '@/pages/route/components/RouteForm/routeAuthConfig';
 import { getOfficialSiteLink } from '@/utils';
 
 const { Option } = Select;
@@ -26,6 +29,8 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
   const [form] = Form.useForm();
   const [fallbackConfig_enabled, setFallbackConfigEnabled] = useState(false);
   const [authConfig_enabled, setAuthConfigEnabled] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode>('consumers');
+  const [mixedAuthWarning, setMixedAuthWarning] = useState(false);
   const [upstreamsError, setUpstreamsError] = useState<any>(false); // 目标AI服务错误提示
   const [llmList, setLlmList] = useState<LlmProvider[]>([]);
   const llmResult = useRequest(getLlmProviders, {
@@ -79,6 +84,7 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
       modelPredicates,
     } = (value || {});
     const _authConfig_enabled = value?.authConfig?.enabled || false;
+    const _authMode = resolveAuthMode(value?.authConfig as AuthConfigLists);
     const _fallbackConfig_enabled = value?.fallbackConfig?.enabled || false;
 
     setAuthConfigEnabled(_authConfig_enabled);
@@ -121,7 +127,10 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
       urlParamPredicates,
       upstreams,
       authConfig_enabled: _authConfig_enabled,
-      authConfig_allowedConsumers: value?.authConfig?.allowedConsumers || [],
+      authMode: _authMode,
+      authConfig_allowedConsumers: _authMode === 'consumers' ? (value?.authConfig?.allowedConsumers || []) : [],
+      authConfig_allowedConsumerGroups: _authMode === 'groups' ? (value?.authConfig?.allowedConsumerGroups || []) : [],
+      authConfig_allowedCredentials: _authMode === 'credentials' ? (value?.authConfig?.allowedCredentials || []) : [],
       ...fallbackInitValues,
       customConfigs: customConfigArray,
     };
@@ -142,6 +151,8 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
     });
 
     form.setFieldsValue(initValues);
+    setAuthMode(_authMode);
+    setMixedAuthWarning(hasIgnoredLists(value?.authConfig as AuthConfigLists, _authMode));
   };
 
   useImperativeHandle(ref, () => ({
@@ -175,7 +186,6 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
         headerPredicates,
         urlParamPredicates,
         fallbackConfig_upstreams = '',
-        authConfig_allowedConsumers = [],
         fallbackConfig_modelNames = '',
         fallbackConfig_responseCodes = [],
         modelPredicates = [],
@@ -211,8 +221,13 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
         payload['fallbackConfig']['strategy'] = "SEQ";
         payload['fallbackConfig']['responseCodes'] = fallbackConfig_responseCodes;
       }
-      payload['authConfig']['allowedConsumers'] = authConfig_allowedConsumers && !Array.isArray(authConfig_allowedConsumers)
-        ? [authConfig_allowedConsumers] : authConfig_allowedConsumers;
+      // UI 单选一种授权方式；插件仍是三列表 OR 语义。总是显式提交三个列表
+      // （空数组=清空），与后端 REPLACE 的 null=保留现值 语义区分开。
+      const [allowedConsumers, allowedConsumerGroups, allowedCredentials] =
+        getListsForMode(values, values.authMode as AuthMode);
+      payload['authConfig']['allowedConsumers'] = allowedConsumers;
+      payload['authConfig']['allowedConsumerGroups'] = allowedConsumerGroups;
+      payload['authConfig']['allowedCredentials'] = allowedCredentials;
 
       // 处理 customConfigs
       const customConfigsObj = {};
@@ -595,33 +610,106 @@ const AiRouteForm: React.FC = forwardRef((props: { value: any }, ref) => {
           }
         </Select>
       </Form.Item>
-      <Form.Item
-        label={t('aiRoute.routeForm.label.authConfigList')}
-        extra={(<HistoryButton text={t('consumer.create')} path={"/consumer"} />)}
-      >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Form.Item
-            name="authConfig_allowedConsumers"
-            noStyle
-          >
-            <Select
-              allowClear
-              mode="multiple"
-              placeholder={t('aiRoute.routeForm.label.authConfigList')}
-              style={{ flex: 1 }}
-            >
-              {consumerList.map((item) => (
-                <Select.Option key={String(item.name)} value={item.name}>{item.name}</Select.Option>
-              ))}
-            </Select>
+      {authConfig_enabled && (
+        <>
+          {mixedAuthWarning && (
+            <Form.Item>
+              <Alert type="warning" showIcon message={t('aiRoute.routeForm.label.authConfigMixedWarning')} />
+            </Form.Item>
+          )}
+          <Form.Item label={t('aiRoute.routeForm.label.authMode')} name="authMode" initialValue="consumers">
+            <Radio.Group onChange={e => setAuthMode(e.target.value)}>
+              <Radio value="consumers">{t('aiRoute.routeForm.label.authModeConsumers')}</Radio>
+              <Radio value="groups">{t('aiRoute.routeForm.label.authModeGroups')}</Radio>
+              <Radio value="credentials">{t('aiRoute.routeForm.label.authModeCredentials')}</Radio>
+            </Radio.Group>
           </Form.Item>
-          <Button
-            style={{ marginLeft: 8 }}
-            onClick={() => consumerResult.run()}
-            icon={<RedoOutlined />}
-          />
-        </div>
-      </Form.Item>
+          {authMode === 'consumers' && (
+            <Form.Item
+              label={t('aiRoute.routeForm.label.authConfigList')}
+              extra={(<HistoryButton text={t('consumer.create')} path={"/consumer"} />)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Form.Item
+                  name="authConfig_allowedConsumers"
+                  noStyle
+                  rules={[{ required: true, message: t('aiRoute.routeForm.label.authConfigRequired') }]}
+                >
+                  <Select
+                    allowClear
+                    mode="multiple"
+                    placeholder={t('aiRoute.routeForm.label.authConfigList')}
+                    style={{ flex: 1 }}
+                  >
+                    {consumerList.map((item) => (
+                      <Select.Option key={String(item.name)} value={item.name}>{item.name}</Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Button
+                  style={{ marginLeft: 8 }}
+                  onClick={() => consumerResult.run()}
+                  icon={<RedoOutlined />}
+                />
+              </div>
+            </Form.Item>
+          )}
+          {authMode === 'groups' && (
+            <Form.Item label={t('aiRoute.routeForm.label.authConfigGroups')}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Form.Item
+                  name="authConfig_allowedConsumerGroups"
+                  noStyle
+                  rules={[{ required: true, message: t('aiRoute.routeForm.label.authConfigRequired') }]}
+                >
+                  <Select
+                    allowClear
+                    mode="multiple"
+                    placeholder={t('aiRoute.routeForm.label.authConfigGroups')}
+                    style={{ flex: 1 }}
+                  >
+                    {Array.from(new Set(consumerList.filter(item => item.group).map(item => item.group))).map(group => (
+                      <Select.Option key={group} value={group}>{group}</Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Button
+                  style={{ marginLeft: 8 }}
+                  onClick={() => consumerResult.run()}
+                  icon={<RedoOutlined />}
+                />
+              </div>
+            </Form.Item>
+          )}
+          {authMode === 'credentials' && (
+            <Form.Item label={t('aiRoute.routeForm.label.authConfigCredentials')}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Form.Item
+                  name="authConfig_allowedCredentials"
+                  noStyle
+                  rules={[{ required: true, message: t('aiRoute.routeForm.label.authConfigRequired') }]}
+                >
+                  <Select
+                    allowClear
+                    mode="tags"
+                    placeholder={t('aiRoute.routeForm.label.authConfigCredentials')}
+                    style={{ flex: 1 }}
+                  >
+                    {getCredentialOptions(consumerList).map(credential => (
+                      <Select.Option key={credential} value={credential}>{credential}</Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Button
+                  style={{ marginLeft: 8 }}
+                  onClick={() => consumerResult.run()}
+                  icon={<RedoOutlined />}
+                />
+              </div>
+            </Form.Item>
+          )}
+        </>
+      )}
 
       <Form.Item
         label={

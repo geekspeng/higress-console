@@ -23,6 +23,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import ConsumerList from './components/ConsumerList';
 import RouteForm from './components/RouteForm';
+import { hasAnyAuthScope, maskAllowedCredential } from './components/RouteForm/routeAuthConfig';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -112,12 +113,32 @@ const RouteList: React.FC = () => {
       render: (value, record) => {
         const { authConfig } = record;
         if (!authConfig || !authConfig.enabled) {
-          return t('aiRoute.authNotEnabled')
+          return t('aiRoute.authNotEnabled');
         }
-        if (!Array.isArray(value) || !value.length) {
-          return t('aiRoute.authEnabledWithoutConsumer')
+        // 授权方式单选后可能是消费者/分组/凭证值任一列表，全部展示
+        const consumers = Array.isArray(authConfig.allowedConsumers) ? authConfig.allowedConsumers : [];
+        const groups = Array.isArray(authConfig.allowedConsumerGroups) ? authConfig.allowedConsumerGroups : [];
+        const credentials = Array.isArray(authConfig.allowedCredentials) ? authConfig.allowedCredentials : [];
+        if (!consumers.length && !groups.length && !credentials.length) {
+          return t('aiRoute.authEnabledWithoutConsumer');
         }
-        return <ConsumerList consumers={value} />;
+        const scopeList = (label: string, values: string[], mask = false) => (
+          <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ color: '#999' }}>{label}</span>
+            <ConsumerList consumers={mask ? values.map(v => maskAllowedCredential(v)) : values} />
+          </div>
+        );
+        const parts = [];
+        if (consumers.length) {
+          parts.push(<ConsumerList key="consumers" consumers={consumers} />);
+        }
+        if (groups.length) {
+          parts.push(scopeList(t('aiRoute.authScopeGroup'), groups));
+        }
+        if (credentials.length) {
+          parts.push(scopeList(t('aiRoute.authScopeCredential'), credentials, true));
+        }
+        return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{parts}</div>;
       },
     },
     {
@@ -401,15 +422,20 @@ const RouteList: React.FC = () => {
 
         // 处理“未授权任何人访问”的情况
         if (selectedAllowedConsumersRef.current.includes("__no_consumers__")) {
-          if (item.authConfig?.enabled && (!item.authConfig.allowedConsumers || item.authConfig.allowedConsumers.length === 0)) {
+          if (item.authConfig?.enabled && !hasAnyAuthScope(item.authConfig)) {
             return true;
           }
         }
 
-        // 处理普通消费者的匹配
-        return item.authConfig?.enabled &&
-          item.authConfig.allowedConsumers?.some(consumer =>
-            selectedAllowedConsumersRef.current.includes(consumer));
+        // 处理授权范围（消费者/分组/凭证值）的匹配
+        return item.authConfig?.enabled && (
+          item.authConfig.allowedConsumers?.some(v =>
+            selectedAllowedConsumersRef.current.includes(v)) ||
+          item.authConfig.allowedConsumerGroups?.some(v =>
+            selectedAllowedConsumersRef.current.includes(v)) ||
+          item.authConfig.allowedCredentials?.some(v =>
+            selectedAllowedConsumersRef.current.includes(v))
+        );
       });
     }
 
@@ -551,16 +577,26 @@ const RouteList: React.FC = () => {
               >
                 {/* 手动添加特殊选项 */}
                 <Option key="__no_consumers__" value="__no_consumers__">
-                  {t('aiRoute.authNotEnabled')}
-                </Option>
-                <Option key="__auth_disabled__" value="__auth_disabled__">
                   {t('aiRoute.authEnabledWithoutConsumer')}
                 </Option>
+                <Option key="__auth_disabled__" value="__auth_disabled__">
+                  {t('aiRoute.authNotEnabled')}
+                </Option>
 
-                {/* 提取所有的唯一allowedConsumers值 */}
+                {/* 提取所有的唯一授权范围值（消费者/分组/凭证值） */}
                 {
                   [...new Set(originalDataSource.flatMap(item => item.authConfig?.allowedConsumers || []))]
                     .map(consumer => (<Option key={consumer} value={consumer}>{consumer}</Option>))
+                }
+                {
+                  [...new Set(originalDataSource.flatMap(item => item.authConfig?.allowedConsumerGroups || []))]
+                    .map(group => (<Option key={`group:${group}`} value={group}>{group}</Option>))
+                }
+                {
+                  [...new Set(originalDataSource.flatMap(item => item.authConfig?.allowedCredentials || []))]
+                    .map(credential => (
+                      <Option key={`credential:${credential}`} value={credential}>{maskAllowedCredential(credential)}</Option>
+                    ))
                 }
               </Select>
             </Form.Item>

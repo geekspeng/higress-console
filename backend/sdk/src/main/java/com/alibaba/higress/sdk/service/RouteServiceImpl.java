@@ -43,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 class RouteServiceImpl implements RouteService {
 
     private static final RoutePageQuery DEFAULT_QUERY = new RoutePageQuery();
-    private static final RouteAuthConfig DEFAULT_AUTH_CONFIG = new RouteAuthConfig(false, null, null);
+    private static final RouteAuthConfig DEFAULT_AUTH_CONFIG =
+        new RouteAuthConfig(false, null, null, null, null);
 
     private final KubernetesClientService kubernetesClientService;
     private final KubernetesModelConverter kubernetesModelConverter;
@@ -170,7 +171,9 @@ class RouteServiceImpl implements RouteService {
         }
         AllowList allowList = AllowList.forTarget(WasmPluginInstanceScope.ROUTE, routeName)
             .authEnabled(authConfig.getEnabled()).credentialTypes(authConfig.getAllowedCredentialTypes())
-            .consumerNames(authConfig.getAllowedConsumers()).build();
+            .consumerNames(authConfig.getAllowedConsumers())
+            .consumerGroups(authConfig.getAllowedConsumerGroups())
+            .credentials(authConfig.getAllowedCredentials()).build();
         consumerService.updateAllowList(AllowListOperation.REPLACE, allowList);
     }
 
@@ -183,6 +186,8 @@ class RouteServiceImpl implements RouteService {
             authConfig.setEnabled(allowList.getAuthEnabled());
             authConfig.setAllowedCredentialTypes(allowList.getCredentialTypes());
             authConfig.setAllowedConsumers(allowList.getConsumerNames());
+            authConfig.setAllowedConsumerGroups(allowList.getConsumerGroups());
+            authConfig.setAllowedCredentials(allowList.getCredentials());
         }
         route.setAuthConfig(authConfig);
         return route;
