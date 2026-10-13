@@ -4,7 +4,7 @@
  * 三个列表（未选的为空数组=清空），与后端 REPLACE 的 null=保留现值
  * 语义区分开。
  */
-import { CredentialType, KeyAuthCredentialSource } from '@/interfaces/consumer';
+import { CredentialType } from '@/interfaces/consumer';
 
 export type AuthMode = 'consumers' | 'groups' | 'credentials';
 
@@ -50,13 +50,9 @@ export function hasAnyAuthScope(auth?: AuthConfigLists | null): boolean {
     || !!auth?.allowedCredentials?.length;
 }
 
-// 列表页展示凭证值时脱敏：保留 Bearer 前缀与首 3 个字符，避免在列表页泄露完整密钥。
+// 列表页展示凭证值时脱敏：仅保留首 3 个字符，避免在列表页泄露完整密钥。
+// 存储值即逻辑凭证值（不带传输前缀），统一按原值脱敏。
 export function maskAllowedCredential(value: string): string {
-  const prefix = 'Bearer ';
-  if (value.startsWith(prefix)) {
-    const rest = value.slice(prefix.length);
-    return prefix + (rest.length > 3 ? rest.slice(0, 3) + '***' : '***');
-  }
   return value.length > 3 ? value.slice(0, 3) + '***' : '***';
 }
 
@@ -73,8 +69,9 @@ export function getListsForMode(values: Record<string, any>, mode: AuthMode): [s
   }
 }
 
-// allow_credentials 匹配的是请求中携带的原始凭证值：BEARER 来源的凭证在请求里带
-// "Bearer " 前缀，选项值必须包含该前缀才能命中。供凭证值输入框生成候选选项。
+// allow_credentials 匹配的是插件提取后的逻辑凭证值（header 来源已剥离
+// scheme 前缀，query 来源为字面值），与凭证库中存储的值一致。
+// 供凭证值输入框生成候选选项。
 interface CredentialCarrier {
   credentials?: { type: string;[propName: string]: any }[];
 }
@@ -82,11 +79,6 @@ interface CredentialCarrier {
 export function getCredentialOptions(consumers: CredentialCarrier[]): string[] {
   return Array.from(new Set(consumers.flatMap(item => (item.credentials || [])
     .filter(c => c.type === CredentialType.KEY_AUTH.key)
-    .flatMap(c => {
-      const values = c.values || [];
-      return c.source === KeyAuthCredentialSource.BEARER
-        ? values.map((v: string) => `Bearer ${v}`)
-        : values;
-    }))
-    .filter(v => !!v)));
+    .flatMap(c => c.values || [])
+    .filter(v => !!v))));
 }
