@@ -302,6 +302,24 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
     }
 
+    @Override
+    public boolean normalizeLegacyCredentialValues() {
+        boolean changed = false;
+        for (CredentialHandler handler : CREDENTIAL_HANDLERS.values()) {
+            List<WasmPluginInstance> changedInstances = new ArrayList<>();
+            for (WasmPluginInstance instance : getAllPluginInstances(handler)) {
+                if (handler.normalizeCredentialValues(instance)) {
+                    changedInstances.add(instance);
+                }
+            }
+            if (!changedInstances.isEmpty()) {
+                wasmPluginInstanceService.addOrUpdateAll(changedInstances);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
     private SortedMap<String, Consumer> getConsumers() {
         SortedMap<String, Consumer> consumers = new TreeMap<>();
         for (CredentialHandler handler : CREDENTIAL_HANDLERS.values()) {

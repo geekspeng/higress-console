@@ -57,4 +57,18 @@ interface CredentialHandler {
     }
 
     void updateAllowList(AllowListOperation operation, WasmPluginInstance instance, AllowList allowList);
+
+    /**
+     * Rewrites legacy credential values that carry the {@code "Bearer "}
+     * auth-scheme transport prefix into the logical form matched by the plugin
+     * after extraction-time stripping. Only header-sourced consumer values are
+     * rewritten (query values are matched literally); route-level
+     * {@code allow_credentials} entries are normalized unconditionally.
+     *
+     * @return true when the instance configuration was changed and needs to be
+     *         persisted again
+     */
+    default boolean normalizeCredentialValues(WasmPluginInstance instance) {
+        return false;
+    }
 }

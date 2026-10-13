@@ -37,4 +37,14 @@ public interface ConsumerService {
     AllowList getAllowList(Map<WasmPluginInstanceScope, String> targets);
 
     void updateAllowList(AllowListOperation operation, AllowList allowList);
+
+    /**
+     * Rewrites legacy key-auth credential values that carry the
+     * {@code "Bearer "} auth-scheme transport prefix into the logical form the
+     * plugin matches after extraction-time stripping. Covers the global
+     * consumer registry and every route/domain-level instance of the plugin.
+     *
+     * @return true when at least one instance was updated and persisted
+     */
+    boolean normalizeLegacyCredentialValues();
 }

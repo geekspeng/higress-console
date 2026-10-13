@@ -184,7 +184,7 @@ public class KeyAuthCredentialHandlerTest {
     @Test
     public void extractConsumersTestGoodConsumerList() {
         WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
-        addConsumer(instance, "zhangsan", true, false, "Authorization", "Bearer sk-123456");
+        addConsumer(instance, "zhangsan", true, false, "Authorization", "sk-123456");
         addConsumer(instance, "lisi", true, false, "X-API-KEY", "abcd-1234");
         addConsumer(instance, "wangwu", false, true, "api_key", "efgh-5678", "ijkl-91011");
         addConsumer(instance, "zhaoliu", true, false, "Authorization", "sk-654321");
@@ -193,6 +193,7 @@ public class KeyAuthCredentialHandlerTest {
         List<Consumer> consumers = handler.extractConsumers(instance);
         Assertions.assertNotNull(consumers);
         Assertions.assertEquals(5, consumers.size());
+        // key 为 Authorization 的 header 来源判定为 BEARER（存储值即逻辑凭证值）
         Assertions.assertTrue(consumers.contains(new Consumer("zhangsan", Lists.newArrayList(
             new KeyAuthCredential(KeyAuthCredentialSource.BEARER.name(), null, Lists.newArrayList("sk-123456"))))));
         Assertions.assertTrue(consumers.contains(
@@ -201,12 +202,14 @@ public class KeyAuthCredentialHandlerTest {
         Assertions.assertTrue(consumers.contains(
             new Consumer("wangwu", Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.QUERY.name(),
                 "api_key", Lists.newArrayList("efgh-5678", "ijkl-91011"))))));
+        // 自定义 header 名恰好是 Authorization 也按 BEARER 展示：线上语义相同
+        //（插件对 header 值统一剥离 scheme 前缀），仅控制台来源选项展示不同
         Assertions.assertTrue(consumers.contains(
-            new Consumer("zhaoliu", Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.HEADER.name(),
-                "Authorization", Lists.newArrayList("sk-654321"))))));
+            new Consumer("zhaoliu", Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.BEARER.name(),
+                null, Lists.newArrayList("sk-654321"))))));
         Assertions.assertTrue(consumers.contains(
-            new Consumer("guoqi", Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.HEADER.name(),
-                "Authorization", Lists.newArrayList("sk-abcdefg"))))));
+            new Consumer("guoqi", Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.BEARER.name(),
+                null, Lists.newArrayList("sk-abcdefg"))))));
     }
 
     @Test
@@ -224,7 +227,9 @@ public class KeyAuthCredentialHandlerTest {
         Assertions.assertEquals(Lists.newArrayList("Authorization"), consumerMap.get("keys"));
         Assertions.assertEquals(true, consumerMap.get("in_header"));
         Assertions.assertNotEquals(Boolean.TRUE, consumerMap.get("in_query"));
-        Assertions.assertEquals(Lists.newArrayList("Bearer sk-123456"), consumerMap.get("credentials"));
+        Assertions.assertEquals("BEARER", consumerMap.get("source"));
+        // 插件在提取边界剥离 auth-scheme 前缀，存储值即逻辑凭证值，不再补 "Bearer " 前缀
+        Assertions.assertEquals(Lists.newArrayList("sk-123456"), consumerMap.get("credentials"));
     }
 
     @Test
@@ -243,7 +248,7 @@ public class KeyAuthCredentialHandlerTest {
         Assertions.assertEquals(Lists.newArrayList("Authorization"), consumerMap.get("keys"));
         Assertions.assertEquals(true, consumerMap.get("in_header"));
         Assertions.assertNotEquals(Boolean.TRUE, consumerMap.get("in_query"));
-        Assertions.assertEquals(Lists.newArrayList("Bearer sk-123456", "Bearer sk-abcdefg"),
+        Assertions.assertEquals(Lists.newArrayList("sk-123456", "sk-abcdefg"),
             consumerMap.get("credentials"));
     }
 
@@ -331,7 +336,7 @@ public class KeyAuthCredentialHandlerTest {
     @Test
     public void saveConsumerTestNoUpdatePartialData() {
         WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
-        addConsumer(instance, "zhangsan", true, false, "Authorization", "Bearer sk-123456");
+        addConsumer(instance, "zhangsan", true, false, "Authorization", "sk-123456");
 
         Consumer consumer = new Consumer("zhangsan",
             Lists.newArrayList(new KeyAuthCredential(KeyAuthCredentialSource.HEADER.name(), "X-API-KEY", null)));
@@ -731,7 +736,8 @@ public class KeyAuthCredentialHandlerTest {
         Assertions.assertEquals("legacy_user", consumer.getName());
         KeyAuthCredential credential = (KeyAuthCredential)consumer.getCredentials().get(0);
         Assertions.assertEquals(KeyAuthCredentialSource.BEARER.name(), credential.getSource());
-        Assertions.assertEquals(Lists.newArrayList("legacy-token"), credential.getValues());
+        // 读取不再剥前缀：存量带前缀值原样读出，由启动迁移统一规范化
+        Assertions.assertEquals(Lists.newArrayList("Bearer legacy-token"), credential.getValues());
     }
 
     @Test
@@ -780,7 +786,7 @@ public class KeyAuthCredentialHandlerTest {
         WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
 
         // 先添加一个consumer
-        addConsumer(instance, "testuser", true, false, "Authorization", "Bearer old-token");
+        addConsumer(instance, "testuser", true, false, "Authorization", "old-token");
 
         // 只更新key，不提供source和values
         Consumer partialConsumer = new Consumer("testuser",
@@ -863,8 +869,8 @@ public class KeyAuthCredentialHandlerTest {
         consumer.put("name", "testuser");
         consumer.put("keys", Lists.newArrayList("Authorization"));
         consumer.put("in_header", true);
-        consumer.put("credential", "Bearer old-token");
-        consumer.put("credentials", Lists.newArrayList("Bearer new-token"));
+        consumer.put("credential", "old-token");
+        consumer.put("credentials", Lists.newArrayList("new-token"));
         consumers.add(consumer);
 
         configurations.put("consumers", consumers);
@@ -878,6 +884,8 @@ public class KeyAuthCredentialHandlerTest {
         KeyAuthCredential credential = (KeyAuthCredential)extractedConsumer.getCredentials().get(0);
         // Should prefer new credentials format over legacy
         Assertions.assertEquals(Lists.newArrayList("new-token", "old-token"), credential.getValues());
+        Assertions.assertEquals(KeyAuthCredentialSource.BEARER.name(), credential.getSource());
+        Assertions.assertNull(credential.getKey());
     }
 
     @Test
@@ -890,6 +898,79 @@ public class KeyAuthCredentialHandlerTest {
             null);
 
         Assertions.assertThrows(ValidationException.class, () -> handler.saveConsumer(instance, consumer));
+    }
+
+    @Test
+    public void extractConsumersBearerClassifiedByAuthorizationKey() {
+        // 新数据形态：key=Authorization + 逻辑值（无前缀）→ BEARER。
+        // 旧实现依赖「所有值都带 Bearer 前缀」反推来源，存储逻辑值后失效。
+        WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
+        addConsumer(instance, "alice", true, false, "Authorization", "sk-alice");
+
+        List<Consumer> consumers = handler.extractConsumers(instance);
+        Assertions.assertEquals(1, consumers.size());
+        KeyAuthCredential credential = (KeyAuthCredential)consumers.get(0).getCredentials().get(0);
+        Assertions.assertEquals(KeyAuthCredentialSource.BEARER.name(), credential.getSource());
+        Assertions.assertNull(credential.getKey());
+        Assertions.assertEquals(Lists.newArrayList("sk-alice"), credential.getValues());
+    }
+
+    // === 存量数据迁移：normalizeCredentialValues =============================
+
+    @Test
+    public void normalizeCredentialValuesNoConfigurations() {
+        WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
+        Assertions.assertFalse(handler.normalizeCredentialValues(instance));
+    }
+
+    @Test
+    public void normalizeCredentialValuesMigratesBearerConsumersAndAllowCredentials() {
+        WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
+        addConsumer(instance, "alice", true, false, "Authorization", "Bearer sk-1", "sk-keep");
+        // query 来源按字面匹配，即使值以 Bearer 开头也不做规范化
+        addConsumer(instance, "bob", false, true, "api_key", "Bearer literal");
+        Map<String, Object> configurations = instance.getConfigurations();
+        configurations.put("allow_credentials", Lists.newArrayList("Bearer t1", "t2", "Bearer t1"));
+
+        Assertions.assertTrue(handler.normalizeCredentialValues(instance));
+
+        List<Map<String, Object>> consumers = (List<Map<String, Object>>)configurations.get("consumers");
+        Assertions.assertEquals(Lists.newArrayList("sk-1", "sk-keep"), storedCredentials(consumers, "alice"));
+        Assertions.assertEquals(Lists.newArrayList("Bearer literal"), storedCredentials(consumers, "bob"));
+        Assertions.assertEquals(Lists.newArrayList("t1", "t2"), configurations.get("allow_credentials"));
+    }
+
+    @Test
+    public void normalizeCredentialValuesSkipsCleanInstance() {
+        WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
+        addConsumer(instance, "alice", true, false, "Authorization", "sk-alice");
+        Map<String, Object> configurations = instance.getConfigurations();
+
+        Assertions.assertFalse(handler.normalizeCredentialValues(instance));
+        Assertions.assertEquals(Lists.newArrayList("sk-alice"),
+            ((List<Map<String, Object>>)configurations.get("consumers")).get(0).get("credentials"));
+    }
+
+    @Test
+    public void normalizeCredentialValuesCollisionKeepsRawValueAndReports() {
+        // alice 规范化为 sk-1 后，bob 的 sk-1 与其冲突：保留原值不丢数据，
+        // 冲突由日志上报（插件会拒绝重复凭证配置，需要人工合并）
+        WasmPluginInstance instance = createInstance(WasmPluginInstanceScope.GLOBAL, null);
+        addConsumer(instance, "alice", true, false, "Authorization", "Bearer sk-1");
+        addConsumer(instance, "bob", true, false, "Authorization", "sk-1");
+
+        Assertions.assertTrue(handler.normalizeCredentialValues(instance));
+
+        List<Map<String, Object>> consumers = (List<Map<String, Object>>)instance.getConfigurations().get("consumers");
+        Assertions.assertEquals(Lists.newArrayList("sk-1"), storedCredentials(consumers, "alice"));
+        Assertions.assertEquals(Lists.newArrayList("sk-1"), storedCredentials(consumers, "bob"));
+    }
+
+    private static Object storedCredentials(List<Map<String, Object>> consumers, String name) {
+        Map<String, Object> consumer =
+            consumers.stream().filter(c -> name.equals(c.get("name"))).findFirst().orElse(null);
+        Assertions.assertNotNull(consumer, name);
+        return consumer.get("credentials");
     }
 
     private WasmPluginInstance createInstance(WasmPluginInstanceScope scope, String target) {

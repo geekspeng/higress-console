@@ -182,7 +182,7 @@ public class ConsumerServiceTest {
         Map<String, Object> config = new HashMap<>();
         config.put("consumers",
             Arrays.asList(ImmutableMap.of("name", consumerName, "keys", Lists.newArrayList("Authorization"),
-                "in_header", true, "credentials", Lists.newArrayList("Bearer test-key"))));
+                "in_header", true, "credentials", Lists.newArrayList("test-key"))));
         instance.setConfigurations(config);
         when(wasmPluginInstanceService.query(eq(WasmPluginInstanceScope.GLOBAL), isNull(),
             eq(BuiltInPluginName.KEY_AUTH), eq(true))).thenReturn(instance);
@@ -768,6 +768,44 @@ public class ConsumerServiceTest {
         assertNotNull(targetInstance);
         assertEquals(targets, targetInstance.getTargets());
         assertFalse(targetInstance.getEnabled(), "Auth should be disabled by default when not explicitly set");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void normalizeLegacyCredentialValuesPersistsChangedInstances() {
+        WasmPluginInstance legacy = createTestInstance();
+        legacy.setGlobalTarget();
+        Map<String, Object> config = new HashMap<>();
+        config.put("consumers", Arrays.asList(new HashMap<>(ImmutableMap.of(
+            "name", "alice", "keys", Lists.newArrayList("Authorization"),
+            "in_header", true, "credentials", Lists.newArrayList("Bearer sk-1")))));
+        legacy.setConfigurations(config);
+        WasmPluginInstance clean = createTestInstance();
+        clean.setTarget(WasmPluginInstanceScope.ROUTE, "route-a");
+        clean.setConfigurations(new HashMap<>(MapUtil.of("allow", Lists.newArrayList("alice"))));
+
+        when(wasmPluginInstanceService.list(BuiltInPluginName.KEY_AUTH, true))
+            .thenReturn(Lists.newArrayList(legacy, clean));
+
+        assertTrue(consumerService.normalizeLegacyCredentialValues());
+
+        ArgumentCaptor<List<WasmPluginInstance>> captor = ArgumentCaptor.forClass(List.class);
+        verify(wasmPluginInstanceService).addOrUpdateAll(captor.capture());
+        assertEquals(1, captor.getValue().size());
+        List<Map<String, Object>> consumers =
+            (List<Map<String, Object>>)captor.getValue().get(0).getConfigurations().get("consumers");
+        assertEquals(Lists.newArrayList("sk-1"), consumers.get(0).get("credentials"));
+    }
+
+    @Test
+    void normalizeLegacyCredentialValuesNoopWhenClean() {
+        WasmPluginInstance clean = createTestInstance();
+        clean.setGlobalTarget();
+        clean.setConfigurations(new HashMap<>(MapUtil.of("allow", Lists.newArrayList("alice"))));
+        when(wasmPluginInstanceService.list(BuiltInPluginName.KEY_AUTH, true)).thenReturn(Lists.newArrayList(clean));
+
+        assertFalse(consumerService.normalizeLegacyCredentialValues());
+        verify(wasmPluginInstanceService, never()).addOrUpdateAll(any());
     }
 
     private static Consumer createTestConsumer(String name) {

@@ -23,6 +23,14 @@ public class KeyAuthConfig {
     public static final String KEYS = "keys";
     public static final String IN_HEADER = "in_header";
     public static final String IN_QUERY = "in_query";
+    /**
+     * Console-only field recording the {@link com.alibaba.higress.sdk.model.consumer.KeyAuthCredentialSource}
+     * of a consumer. The plugin ignores unknown fields; it keeps the console's
+     * source choice stable when a custom header is literally named
+     * {@code Authorization}, which the legacy key-based inference cannot
+     * distinguish from the BEARER source.
+     */
+    public static final String CONSUMER_SOURCE = "source";
 
     public static final String ALLOW = "allow";
     public static final String ALLOW_GROUPS = "allow_groups";
