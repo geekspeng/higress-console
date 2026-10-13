@@ -30,9 +30,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-agent:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-agent:1.0.0",
       "resourceDir": "ai-agent",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-cache": {
       "digest": "sha256:a516df887d494ba3d1a6ce86fbf6664142a383a7a54ea44b24feaf0e43aa2579",
@@ -60,9 +60,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-cache:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-cache:1.0.0",
       "resourceDir": "ai-cache",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-context-limit": {
       "digest": "sha256:2a86d8826d20a35b88af498276589392ef9de3756bb250b91cabe0beba658dc1",
@@ -120,9 +120,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-data-masking:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-data-masking:1.0.0",
       "resourceDir": "ai-data-masking",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-endpoint-picker": {
       "digest": "sha256:3dfa628ce87b84ae4306208f7141a19389c04aa947d7a17d435952757deb9697",
@@ -180,9 +180,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-history:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-history:1.0.0",
       "resourceDir": "ai-history",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-intent": {
       "digest": "sha256:28056b23a92d153bbd0c578f591699e09e4bcc7ffb700341cc01929ecd6f6c3d",
@@ -210,9 +210,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-intent:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-intent:1.0.0",
       "resourceDir": "ai-intent",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-json-resp": {
       "digest": "sha256:75b625ea66f1bbb2e043ba9e5a9cd8871e36f4868f61a478b4edf33fba5cb8a5",
@@ -240,9 +240,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-json-resp:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-json-resp:1.0.0",
       "resourceDir": "ai-json-resp",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-load-balancer": {
       "digest": "sha256:0ee7dafb442c8be3ad10441b492bc865ead8bb02f2e835c173ac73881a2569a5",
@@ -270,9 +270,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-load-balancer:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-load-balancer:1.0.0",
       "resourceDir": "ai-load-balancer",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-prompt-decorator": {
       "digest": "sha256:106fdbe44e32f4cf67cda76341c27cfba46b35277bf8a768c6cd8828a6aa8de7",
@@ -300,9 +300,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-prompt-decorator:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-prompt-decorator:1.0.0",
       "resourceDir": "ai-prompt-decorator",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-prompt-template": {
       "digest": "sha256:21f82e8202f5d5ea2ec212848a87088001cda656a5e3b8614e377019cfaee20a",
@@ -330,9 +330,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-prompt-template:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-prompt-template:1.0.0",
       "resourceDir": "ai-prompt-template",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-proxy": {
       "digest": "sha256:cacd268f76e245bcc1d2c05f549d514038e888d460c194e0059a0e7b92f98eec",
@@ -360,9 +360,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-proxy:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-proxy:1.0.0",
       "resourceDir": "ai-proxy",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-quota": {
       "digest": "sha256:2684810410de2803200f21d4971fe30161a7c0060c39ccab3906f6bcd4b8a509",
@@ -390,9 +390,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-quota:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-quota:1.0.0",
       "resourceDir": "ai-quota",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-rag": {
       "digest": "sha256:043b9dc12d6c0312b58a0322f3ab8b72f9016a9efde4313c9ede0ebff49669e3",
@@ -420,9 +420,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-rag:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-rag:1.0.0",
       "resourceDir": "ai-rag",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-search": {
       "digest": "sha256:ed6c6d7fdcc77de37c2d97fea7f5cce8fe91c4b1cc1d065adf455a2ee2f2adce",
@@ -450,9 +450,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-search:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-search:1.0.0",
       "resourceDir": "ai-search",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-security-guard": {
       "digest": "sha256:23212fa3ed833b32d5d796adc7ed24585f160a7dbce99713dd89f1bc8ecf29ad",
@@ -480,9 +480,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-security-guard:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-security-guard:1.0.0",
       "resourceDir": "ai-security-guard",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-statistics": {
       "digest": "sha256:c8c16f5295e14509710af9ea962ac7ebefe3b7f995bd6fd33885bbe2761c1d56",
@@ -510,9 +510,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-statistics:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-statistics:1.0.0",
       "resourceDir": "ai-statistics",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-token-ratelimit": {
       "digest": "sha256:9276a7d4cbd7afef668fd1aaf41212e663fd7fa98661c619398a7f2fb2736679",
@@ -540,9 +540,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-token-ratelimit:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-token-ratelimit:1.0.0",
       "resourceDir": "ai-token-ratelimit",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ai-transformer": {
       "digest": "sha256:4066a24de242b0037a0665621190718f9f10040058551f4efea3f6237cdc64f8",
@@ -570,9 +570,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-transformer:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-transformer:1.0.0",
       "resourceDir": "ai-transformer",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "cache-control": {
       "digest": "sha256:8a1e10934fbffbcd560114d06fc4fdf5f5e5ceb495995da20bc8264759f4ebc7",
@@ -600,9 +600,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/cache-control:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/cache-control:1.0.0",
       "resourceDir": "cache-control",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "cluster-key-rate-limit": {
       "digest": "sha256:95548e1946456153cbc3a119e293524edcd530a50157decc7af8825287affae9",
@@ -630,9 +630,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/cluster-key-rate-limit:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/cluster-key-rate-limit:1.0.0",
       "resourceDir": "cluster-key-rate-limit",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "cors": {
       "digest": "sha256:8cacf4fa36c361acf7879060506e2fc5e7d0f9d64f1aa3cee1d706742f2fa537",
@@ -660,9 +660,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/cors:2.0.4",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/cors:1.0.0",
       "resourceDir": "cors",
-      "version": "2.0.4"
+      "version": "1.0.0"
     },
     "de-graphql": {
       "digest": "sha256:b7ccfd83ca13108d628292c7b5158e9eec941d150237860af234675000abfb58",
@@ -690,9 +690,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/de-graphql:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/de-graphql:1.0.0",
       "resourceDir": "de-graphql",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "ext-auth": {
       "digest": "sha256:35abb074337b06c67d47b1a4da43422657dec8b7853a602e144eea0366174229",
@@ -720,9 +720,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ext-auth:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ext-auth:1.0.0",
       "resourceDir": "ext-auth",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "frontend-gray": {
       "digest": "sha256:ec917c39643d5922ed93d50a6ede43e045bb01ed6a6abacf92fc23dcc911fa9d",
@@ -750,9 +750,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/frontend-gray:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/frontend-gray:1.0.0",
       "resourceDir": "frontend-gray",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "geo-ip": {
       "digest": "sha256:4a053f5c72139db1eb605b860a5aac675ec0534757a95f82aa46d9de60d182eb",
@@ -780,9 +780,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/geo-ip:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/geo-ip:1.0.0",
       "resourceDir": "geo-ip",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "gw-error-format": {
       "digest": "sha256:72ca3e95fb2b6525d8983d7c4813f5709e473029519a5cd84c3cb59ae080d3f3",
@@ -870,9 +870,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ip-restriction:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ip-restriction:1.0.0",
       "resourceDir": "ip-restriction",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "json-converter": {
       "digest": "sha256:437746e52b1c46a39352c04e84c3abb4049067452a489c86ceff1972c482589b",
@@ -900,9 +900,9 @@
         "repository": "higress-group/higress",
         "sourceCommit": "13558bb73e0ef36fac6d7b7446e4da4801693f7c"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/jsonrpc-converter:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/jsonrpc-converter:1.0.0",
       "resourceDir": "json-converter",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "log-request-response": {
       "digest": "sha256:c086bdcf6cfe9c0bdab057e984e227beaf19e882f9543e8c8ae4f2898cfbea10",
@@ -990,9 +990,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/mcp-server:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/mcp-server:1.0.0",
       "resourceDir": "mcp-server",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "model-mapper": {
       "digest": "sha256:19f4a0670b4aab25a978eaef63341495b5c5691c280afc34cfe6b486a54a4622",
@@ -1020,9 +1020,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/model-mapper:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/model-mapper:1.0.0",
       "resourceDir": "model-mapper",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "model-router": {
       "digest": "sha256:14e142764fb83a71035e0d714039158cdd38c9c1dfbcff115dcc3b7f46144ec5",
@@ -1050,9 +1050,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/model-router:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/model-router:1.0.0",
       "resourceDir": "model-router",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "nginx-rewrite-compatible": {
       "digest": "sha256:1a140fbfa1d3d3c7ae2dc64e5c09feaeba6b2ae43ae38703330f9e712f40ba11",
@@ -1110,9 +1110,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/oidc:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/oidc:1.0.0",
       "resourceDir": "oidc",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "opa": {
       "digest": "sha256:1dc121bad1ec04118181e3b5cb5c85130e53d350d9cc264826fd51d02b5fd874",
@@ -1140,9 +1140,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/opa:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/opa:1.0.0",
       "resourceDir": "opa",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "request-validation": {
       "digest": "sha256:efeb7f1786cc699918fca2c4d1ce8fb8bbd6f78b265068d87eb0532731dcd546",
@@ -1170,9 +1170,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/request-validation:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/request-validation:1.0.0",
       "resourceDir": "request-validation",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "response-cache": {
       "digest": "sha256:74511af1a6ba0937bccd99ae1deff0b7a189b01a78e2527eaa3bcebd6cb6841d",
@@ -1230,9 +1230,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/traffic-tag:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/traffic-tag:1.0.0",
       "resourceDir": "traffic-tag",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "transformer": {
       "digest": "sha256:74474c68d29625b537908bfb5ad8a5f200616498a8957ae063ae9987bb540a52",
@@ -1260,9 +1260,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/transformer:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/transformer:1.0.0",
       "resourceDir": "transformer",
-      "version": "2.0.3"
+      "version": "1.0.0"
     },
     "waf": {
       "digest": "sha256:6cccfe9dae6572781feb59d808492a0188176a252c1760e73ff1a4797d3feb9e",
@@ -1290,9 +1290,9 @@
         "repository": "higress-group/higress-console",
         "sourceCommit": "36aa9c67fb0057164dab9b1fe687b38fe5b8a022"
       },
-      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/waf:2.0.3",
+      "ociRef": "oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/waf:1.0.0",
       "resourceDir": "waf",
-      "version": "2.0.3"
+      "version": "1.0.0"
     }
   },
   "schemaVersion": 2,

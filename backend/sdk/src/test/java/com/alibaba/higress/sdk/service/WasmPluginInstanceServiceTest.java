@@ -58,7 +58,7 @@ import io.kubernetes.client.openapi.ApiException;
 public class WasmPluginInstanceServiceTest {
 
     private static final String TEST_BUILT_IN_PLUGIN_NAME = "basic-auth";
-    private static final String DEFAULT_VERSION = "2.0.0";
+    private static final String DEFAULT_VERSION = "1.0.0";
     private static final String OLD_VERSION = "0.9.0";
     private static final String TEST_BUILT_IN_PLUGIN_USER_CR_NAME =
         TEST_BUILT_IN_PLUGIN_NAME + Separators.DASH + DEFAULT_VERSION;
@@ -412,7 +412,7 @@ public class WasmPluginInstanceServiceTest {
         Assertions.assertEquals(TEST_BUILT_IN_PLUGIN_INTERNAL_CR_NAME, cr.getMetadata().getName());
         Assertions.assertEquals(DEFAULT_VERSION,
             KubernetesUtil.getLabel(cr.getMetadata(), KubernetesConstants.Label.WASM_PLUGIN_VERSION_KEY));
-        Assertions.assertEquals("oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/basic-auth:2.0.0",
+        Assertions.assertEquals("oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/basic-auth:" + DEFAULT_VERSION,
             cr.getSpec().getUrl());
         Assertions.assertNotEquals(instance.getEnabled(), cr.getSpec().getDefaultConfigDisable());
         Assertions.assertEquals(instance.getConfigurations(), cr.getSpec().getDefaultConfig());
