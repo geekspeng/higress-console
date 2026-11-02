@@ -85,6 +85,30 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- snakeyaml 漏洞修复：覆盖 Spring Boot 2.7.18 管理的 jackson 2.13.5 / snakeyaml 1.30，
+			     client-java 升 18.0.1（适配 snakeyaml 2.x 且 API 签名与 17 兼容，19+ 不兼容） -->
+			<dependency>
+				<groupId>com.fasterxml.jackson</groupId>
+				<artifactId>jackson-bom</artifactId>
+				<version>2.16.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.yaml</groupId>
+				<artifactId>snakeyaml</artifactId>
+				<version>2.2</version>
+			</dependency>
+			<dependency>
+				<groupId>io.kubernetes</groupId>
+				<artifactId>client-java</artifactId>
+				<version>18.0.1</version>
+			</dependency>
+			<dependency>
+				<groupId>io.kubernetes</groupId>
+				<artifactId>client-java-api</artifactId>
+				<version>18.0.1</version>
+			</dependency>
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
@@ -108,7 +132,8 @@
 			<dependency>
 				<groupId>io.kubernetes</groupId>
 				<artifactId>client-java</artifactId>
-				<version>${k8s-client.version}</version>
+				<!-- 覆盖原 ${k8s-client.version}=17.0.0，见 dependencyManagement 头部 18.0.1 条目 -->
+				<version>18.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.bouncycastle</groupId>
